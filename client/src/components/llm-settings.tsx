@@ -24,6 +24,27 @@ export default function LLMSettings() {
       model: "Claude 4.0 Sonnet",
       description: "Claude 4.0 Sonnet으로 더욱 정교한 분석과 창의적 콘텐츠",
       status: "최신"
+    },
+    {
+      id: "gemini",
+      name: "Google Gemini",
+      model: "Gemini 2.5 Flash/Pro",
+      description: "Google의 최신 멀티모달 AI로 빠른 처리와 정확한 분석",
+      status: "최신"
+    },
+    {
+      id: "deepseek",
+      name: "DeepSeek",
+      model: "DeepSeek-V3",
+      description: "코딩과 추론에 특화된 고성능 AI 모델",
+      status: "특화"
+    },
+    {
+      id: "grok",
+      name: "Grok (xAI)",
+      model: "Grok-2",
+      description: "실시간 정보 접근과 창의적 사고에 강한 AI",
+      status: "실시간"
     }
   ];
 
@@ -65,7 +86,11 @@ export default function LLMSettings() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium text-gray-900">{provider.name}</h4>
-                      <Badge variant={provider.status === "추천" ? "default" : "secondary"}>
+                      <Badge variant={
+                        provider.status === "추천" ? "default" : 
+                        provider.status === "최신" ? "secondary" :
+                        provider.status === "특화" ? "outline" : "destructive"
+                      }>
                         {provider.status}
                       </Badge>
                     </div>
@@ -98,7 +123,7 @@ export default function LLMSettings() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                <strong>💡 팁:</strong> OpenAI는 빠른 처리 속도를, Anthropic은 더 세밀한 분석을 제공합니다. 
+                <strong>💡 팁:</strong> OpenAI는 범용성이, Anthropic은 분석력이, Gemini는 속도가, DeepSeek는 추론력이, Grok은 실시간성이 강합니다.
                 언제든지 변경할 수 있습니다.
               </p>
             </div>

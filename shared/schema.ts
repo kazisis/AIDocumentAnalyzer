@@ -14,7 +14,7 @@ export const tasks = pgTable("tasks", {
   topic: text("topic").notNull(),
   sourceUrl: text("source_url"),
   sourceFile: text("source_file"),
-  sourceText: text("source_text"), // New field for text input
+  sourceText: text("source_text"), // New field for text input with increased limit
   comparison: text("comparison"),
   requirements: text("requirements").notNull(),
   status: text("status").notNull().default("processing"), // processing, review_pending, approved, completed

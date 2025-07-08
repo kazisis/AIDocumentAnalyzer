@@ -147,12 +147,16 @@ export default function TaskCreation() {
                           </FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="URL 대신 직접 텍스트로 자료를 입력하세요 (기사 내용, 데이터, 보고서 등)"
-                              rows={6}
+                              placeholder="URL 대신 직접 텍스트로 자료를 입력하세요 (기사 내용, 데이터, 보고서 등) - 최대 50,000자"
+                              rows={8}
                               className="resize-none"
+                              maxLength={50000}
                               {...field}
                             />
                           </FormControl>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {field.value?.length || 0}/50,000자
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
