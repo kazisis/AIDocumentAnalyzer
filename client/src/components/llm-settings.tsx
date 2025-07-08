@@ -16,35 +16,35 @@ export default function LLMSettings() {
       name: "OpenAI",
       model: "GPT-4o",
       description: "최신 GPT-4o 모델로 빠르고 정확한 콘텐츠 생성",
-      status: "추천"
+      status: "범용성"
     },
     {
       id: "anthropic",
       name: "Anthropic",
-      model: "Claude 4.0 Sonnet",
-      description: "Claude 4.0 Sonnet으로 더욱 정교한 분석과 창의적 콘텐츠",
-      status: "최신"
+      model: "Claude 3.5 Sonnet",
+      description: "Claude 3.5 Sonnet으로 더욱 정교한 분석과 창의적 콘텐츠",
+      status: "분석력"
     },
     {
       id: "gemini",
-      name: "Google Gemini",
-      model: "Gemini 2.5 Flash/Pro",
+      name: "Google",
+      model: "Gemini 1.5 Pro",
       description: "Google의 최신 멀티모달 AI로 빠른 처리와 정확한 분석",
-      status: "최신"
+      status: "속도"
     },
     {
       id: "deepseek",
       name: "DeepSeek",
-      model: "DeepSeek-V3",
+      model: "DeepSeek-V2",
       description: "코딩과 추론에 특화된 고성능 AI 모델",
-      status: "특화"
+      status: "추론력"
     },
     {
       id: "grok",
-      name: "Grok (xAI)",
-      model: "Grok-2",
+      name: "xAI",
+      model: "Grok",
       description: "실시간 정보 접근과 창의적 사고에 강한 AI",
-      status: "실시간"
+      status: "실시간성"
     }
   ];
 
@@ -87,9 +87,10 @@ export default function LLMSettings() {
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium text-gray-900">{provider.name}</h4>
                       <Badge variant={
-                        provider.status === "추천" ? "default" : 
-                        provider.status === "최신" ? "secondary" :
-                        provider.status === "특화" ? "outline" : "destructive"
+                        provider.status === "범용성" ? "default" : 
+                        provider.status === "분석력" ? "secondary" :
+                        provider.status === "속도" ? "outline" : 
+                        provider.status === "추론력" ? "destructive" : "default"
                       }>
                         {provider.status}
                       </Badge>
@@ -123,8 +124,8 @@ export default function LLMSettings() {
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                <strong>💡 팁:</strong> OpenAI는 범용성이, Anthropic은 분석력이, Gemini는 속도가, DeepSeek는 추론력이, Grok은 실시간성이 강합니다.
-                언제든지 변경할 수 있습니다.
+                <strong>💡 팁:</strong> 각 AI 모델은 고유한 특성을 가지고 있습니다. 
+                분석 주제와 목적에 맞는 모델을 선택하여 최적의 결과를 얻으세요.
               </p>
             </div>
           </CardContent>

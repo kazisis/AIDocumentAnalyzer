@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from "@google/genai";
+import { KOREAN_BLOG_PROMPT_TEMPLATE, DERIVATIVE_CONTENT_PROMPT_TEMPLATE } from "./content-generation-prompt";
 
 /*
 <important_code_snippet_instructions>
@@ -59,32 +60,16 @@ export class OpenAIProvider implements LLMProvider {
       sourceInfo += `참고 자료:\n${request.sourceText}\n`;
     }
 
-    const prompt = `
-자동차 시장 분석 전문가로서 다음 정보를 바탕으로 전문적인 한글 블로그 포스트를 작성해주세요.
-
-주제: ${request.topic}
-${sourceInfo}
-${request.comparison ? `비교 분석 대상: ${request.comparison}` : ''}
-요청사항: ${request.requirements}
-
-다음 형식으로 응답해주세요:
-- 제목은 SEO에 최적화되고 흥미를 끄는 형태로 작성
-- 본문은 HTML 형식으로 작성 (h2, h3, p, table, ul, ol 태그 사용)
-- 데이터가 있다면 HTML 테이블로 구성
-- 전문적이면서도 읽기 쉬운 톤으로 작성
-- 2000-3000자 분량
-
-JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형식의 본문"}
-`;
+    const prompt = KOREAN_BLOG_PROMPT_TEMPLATE
+      .replace('{topic}', request.topic)
+      .replace('{sourceInfo}', sourceInfo)
+      .replace('{comparison}', request.comparison ? `비교 분석 대상: ${request.comparison}` : '')
+      .replace('{requirements}', request.requirements);
 
     try {
       const response = await this.client.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
-          {
-            role: "system",
-            content: "당신은 자동차 산업 분석 전문가입니다. 전문적이고 신뢰할 수 있는 콘텐츠를 작성합니다."
-          },
           {
             role: "user",
             content: prompt
@@ -104,33 +89,14 @@ JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형�
   }
 
   async generateDerivativeContent(koreanBlog: BlogContent): Promise<DerivativeContent> {
-    const prompt = `
-다음 한글 블로그 포스트를 바탕으로 3가지 파생 콘텐츠를 생성해주세요:
-
-제목: ${koreanBlog.title}
-내용: ${koreanBlog.content}
-
-다음과 같이 생성해주세요:
-1. 영문 블로그: 한글 블로그를 영어로 번역하되, 서구 독자에게 맞게 조정
-2. 스레드 포스트: 4개의 연속된 포스트로 분할 (각 280자 이내)
-3. 트위터 포스트: 4개의 독립적인 트윗 (각 280자 이내, 해시태그 포함)
-
-JSON 형식으로 응답해주세요:
-{
-  "englishBlog": {"title": "영문 제목", "content": "HTML 형식의 영문 본문"},
-  "threads": ["포스트1", "포스트2", "포스트3", "포스트4"],
-  "tweets": ["트윗1", "트윗2", "트윗3", "트윗4"]
-}
-`;
+    const prompt = DERIVATIVE_CONTENT_PROMPT_TEMPLATE
+      .replace('{title}', koreanBlog.title)
+      .replace('{content}', koreanBlog.content);
 
     try {
       const response = await this.client.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
-          {
-            role: "system",
-            content: "당신은 다국어 콘텐츠 전문가입니다. 원본의 의미를 유지하면서 각 플랫폼에 최적화된 콘텐츠를 생성합니다."
-          },
           {
             role: "user",
             content: prompt
@@ -170,23 +136,11 @@ export class AnthropicProvider implements LLMProvider {
       sourceInfo += `참고 자료:\n${request.sourceText}\n`;
     }
 
-    const prompt = `
-자동차 시장 분석 전문가로서 다음 정보를 바탕으로 전문적인 한글 블로그 포스트를 작성해주세요.
-
-주제: ${request.topic}
-${sourceInfo}
-${request.comparison ? `비교 분석 대상: ${request.comparison}` : ''}
-요청사항: ${request.requirements}
-
-다음 형식으로 응답해주세요:
-- 제목은 SEO에 최적화되고 흥미를 끄는 형태로 작성
-- 본문은 HTML 형식으로 작성 (h2, h3, p, table, ul, ol 태그 사용)
-- 데이터가 있다면 HTML 테이블로 구성
-- 전문적이면서도 읽기 쉬운 톤으로 작성
-- 2000-3000자 분량
-
-JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형식의 본문"}
-`;
+    const prompt = KOREAN_BLOG_PROMPT_TEMPLATE
+      .replace('{topic}', request.topic)
+      .replace('{sourceInfo}', sourceInfo)
+      .replace('{comparison}', request.comparison ? `비교 분석 대상: ${request.comparison}` : '')
+      .replace('{requirements}', request.requirements);
 
     try {
       const response = await this.client.messages.create({
@@ -194,7 +148,7 @@ JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형�
         messages: [{ role: 'user', content: prompt }],
         // "claude-sonnet-4-20250514"
         model: DEFAULT_ANTHROPIC_MODEL,
-        system: '당신은 자동차 산업 분석 전문가입니다. 전문적이고 신뢰할 수 있는 콘텐츠를 작성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다.',
+        system: '응답은 반드시 유효한 JSON 형식이어야 합니다.',
       });
 
       const result = JSON.parse(response.content[0].text);
@@ -208,24 +162,9 @@ JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형�
   }
 
   async generateDerivativeContent(koreanBlog: BlogContent): Promise<DerivativeContent> {
-    const prompt = `
-다음 한글 블로그 포스트를 바탕으로 3가지 파생 콘텐츠를 생성해주세요:
-
-제목: ${koreanBlog.title}
-내용: ${koreanBlog.content}
-
-다음과 같이 생성해주세요:
-1. 영문 블로그: 한글 블로그를 영어로 번역하되, 서구 독자에게 맞게 조정
-2. 스레드 포스트: 4개의 연속된 포스트로 분할 (각 280자 이내)
-3. 트위터 포스트: 4개의 독립적인 트윗 (각 280자 이내, 해시태그 포함)
-
-JSON 형식으로 응답해주세요:
-{
-  "englishBlog": {"title": "영문 제목", "content": "HTML 형식의 영문 본문"},
-  "threads": ["포스트1", "포스트2", "포스트3", "포스트4"],
-  "tweets": ["트윗1", "트윗2", "트윗3", "트윗4"]
-}
-`;
+    const prompt = DERIVATIVE_CONTENT_PROMPT_TEMPLATE
+      .replace('{title}', koreanBlog.title)
+      .replace('{content}', koreanBlog.content);
 
     try {
       const response = await this.client.messages.create({
@@ -233,7 +172,7 @@ JSON 형식으로 응답해주세요:
         messages: [{ role: 'user', content: prompt }],
         // "claude-sonnet-4-20250514"
         model: DEFAULT_ANTHROPIC_MODEL,
-        system: '당신은 다국어 콘텐츠 전문가입니다. 원본의 의미를 유지하면서 각 플랫폼에 최적화된 콘텐츠를 생성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다.',
+        system: '응답은 반드시 유효한 JSON 형식이어야 합니다.',
       });
 
       const result = JSON.parse(response.content[0].text);
@@ -265,29 +204,17 @@ export class GeminiProvider implements LLMProvider {
       sourceInfo += `참고 자료:\n${request.sourceText}\n`;
     }
 
-    const prompt = `
-자동차 시장 분석 전문가로서 다음 정보를 바탕으로 전문적인 한글 블로그 포스트를 작성해주세요.
-
-주제: ${request.topic}
-${sourceInfo}
-${request.comparison ? `비교 분석 대상: ${request.comparison}` : ''}
-요청사항: ${request.requirements}
-
-다음 형식으로 응답해주세요:
-- 제목은 SEO에 최적화되고 흥미를 끄는 형태로 작성
-- 본문은 HTML 형식으로 작성 (h2, h3, p, table, ul, ol 태그 사용)
-- 데이터가 있다면 HTML 테이블로 구성
-- 전문적이면서도 읽기 쉬운 톤으로 작성
-- 2000-3000자 분량
-
-JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형식의 본문"}
-`;
+    const prompt = KOREAN_BLOG_PROMPT_TEMPLATE
+      .replace('{topic}', request.topic)
+      .replace('{sourceInfo}', sourceInfo)
+      .replace('{comparison}', request.comparison ? `비교 분석 대상: ${request.comparison}` : '')
+      .replace('{requirements}', request.requirements);
 
     try {
       const response = await this.client.models.generateContent({
         model: "gemini-2.5-flash",
         config: {
-          systemInstruction: '당신은 자동차 산업 분석 전문가입니다. 전문적이고 신뢰할 수 있는 콘텐츠를 작성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다.',
+          systemInstruction: '응답은 반드시 유효한 JSON 형식이어야 합니다.',
           responseMimeType: "application/json",
           responseSchema: {
             type: "object",
@@ -312,30 +239,15 @@ JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형�
   }
 
   async generateDerivativeContent(koreanBlog: BlogContent): Promise<DerivativeContent> {
-    const prompt = `
-다음 한글 블로그 포스트를 바탕으로 3가지 파생 콘텐츠를 생성해주세요:
-
-제목: ${koreanBlog.title}
-내용: ${koreanBlog.content}
-
-다음과 같이 생성해주세요:
-1. 영문 블로그: 한글 블로그를 영어로 번역하되, 서구 독자에게 맞게 조정
-2. 스레드 포스트: 4개의 연속된 포스트로 분할 (각 280자 이내)
-3. 트위터 포스트: 4개의 독립적인 트윗 (각 280자 이내, 해시태그 포함)
-
-JSON 형식으로 응답해주세요:
-{
-  "englishBlog": {"title": "영문 제목", "content": "HTML 형식의 영문 본문"},
-  "threads": ["포스트1", "포스트2", "포스트3", "포스트4"],
-  "tweets": ["트윗1", "트윗2", "트윗3", "트윗4"]
-}
-`;
+    const prompt = DERIVATIVE_CONTENT_PROMPT_TEMPLATE
+      .replace('{title}', koreanBlog.title)
+      .replace('{content}', koreanBlog.content);
 
     try {
       const response = await this.client.models.generateContent({
         model: "gemini-2.5-pro",
         config: {
-          systemInstruction: '당신은 다국어 콘텐츠 전문가입니다. 원본의 의미를 유지하면서 각 플랫폼에 최적화된 콘텐츠를 생성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다.',
+          systemInstruction: '응답은 반드시 유효한 JSON 형식이어야 합니다.',
           responseMimeType: "application/json",
           responseSchema: {
             type: "object",
@@ -395,32 +307,16 @@ export class DeepSeekProvider implements LLMProvider {
       sourceInfo += `참고 자료:\n${request.sourceText}\n`;
     }
 
-    const prompt = `
-자동차 시장 분석 전문가로서 다음 정보를 바탕으로 전문적인 한글 블로그 포스트를 작성해주세요.
-
-주제: ${request.topic}
-${sourceInfo}
-${request.comparison ? `비교 분석 대상: ${request.comparison}` : ''}
-요청사항: ${request.requirements}
-
-다음 형식으로 응답해주세요:
-- 제목은 SEO에 최적화되고 흥미를 끄는 형태로 작성
-- 본문은 HTML 형식으로 작성 (h2, h3, p, table, ul, ol 태그 사용)
-- 데이터가 있다면 HTML 테이블로 구성
-- 전문적이면서도 읽기 쉬운 톤으로 작성
-- 2000-3000자 분량
-
-JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형식의 본문"}
-`;
+    const prompt = KOREAN_BLOG_PROMPT_TEMPLATE
+      .replace('{topic}', request.topic)
+      .replace('{sourceInfo}', sourceInfo)
+      .replace('{comparison}', request.comparison ? `비교 분석 대상: ${request.comparison}` : '')
+      .replace('{requirements}', request.requirements);
 
     try {
       const response = await this.client.chat.completions.create({
         model: "deepseek-chat",
         messages: [
-          {
-            role: "system",
-            content: "당신은 자동차 산업 분석 전문가입니다. 전문적이고 신뢰할 수 있는 콘텐츠를 작성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다."
-          },
           {
             role: "user",
             content: prompt
@@ -440,33 +336,14 @@ JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형�
   }
 
   async generateDerivativeContent(koreanBlog: BlogContent): Promise<DerivativeContent> {
-    const prompt = `
-다음 한글 블로그 포스트를 바탕으로 3가지 파생 콘텐츠를 생성해주세요:
-
-제목: ${koreanBlog.title}
-내용: ${koreanBlog.content}
-
-다음과 같이 생성해주세요:
-1. 영문 블로그: 한글 블로그를 영어로 번역하되, 서구 독자에게 맞게 조정
-2. 스레드 포스트: 4개의 연속된 포스트로 분할 (각 280자 이내)
-3. 트위터 포스트: 4개의 독립적인 트윗 (각 280자 이내, 해시태그 포함)
-
-JSON 형식으로 응답해주세요:
-{
-  "englishBlog": {"title": "영문 제목", "content": "HTML 형식의 영문 본문"},
-  "threads": ["포스트1", "포스트2", "포스트3", "포스트4"],
-  "tweets": ["트윗1", "트윗2", "트윗3", "트윗4"]
-}
-`;
+    const prompt = DERIVATIVE_CONTENT_PROMPT_TEMPLATE
+      .replace('{title}', koreanBlog.title)
+      .replace('{content}', koreanBlog.content);
 
     try {
       const response = await this.client.chat.completions.create({
         model: "deepseek-chat",
         messages: [
-          {
-            role: "system",
-            content: "당신은 다국어 콘텐츠 전문가입니다. 원본의 의미를 유지하면서 각 플랫폼에 최적화된 콘텐츠를 생성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다."
-          },
           {
             role: "user",
             content: prompt
@@ -507,32 +384,16 @@ export class GrokProvider implements LLMProvider {
       sourceInfo += `참고 자료:\n${request.sourceText}\n`;
     }
 
-    const prompt = `
-자동차 시장 분석 전문가로서 다음 정보를 바탕으로 전문적인 한글 블로그 포스트를 작성해주세요.
-
-주제: ${request.topic}
-${sourceInfo}
-${request.comparison ? `비교 분석 대상: ${request.comparison}` : ''}
-요청사항: ${request.requirements}
-
-다음 형식으로 응답해주세요:
-- 제목은 SEO에 최적화되고 흥미를 끄는 형태로 작성
-- 본문은 HTML 형식으로 작성 (h2, h3, p, table, ul, ol 태그 사용)
-- 데이터가 있다면 HTML 테이블로 구성
-- 전문적이면서도 읽기 쉬운 톤으로 작성
-- 2000-3000자 분량
-
-JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형식의 본문"}
-`;
+    const prompt = KOREAN_BLOG_PROMPT_TEMPLATE
+      .replace('{topic}', request.topic)
+      .replace('{sourceInfo}', sourceInfo)
+      .replace('{comparison}', request.comparison ? `비교 분석 대상: ${request.comparison}` : '')
+      .replace('{requirements}', request.requirements);
 
     try {
       const response = await this.client.chat.completions.create({
         model: "grok-2-1212",
         messages: [
-          {
-            role: "system",
-            content: "당신은 자동차 산업 분석 전문가입니다. 전문적이고 신뢰할 수 있는 콘텐츠를 작성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다."
-          },
           {
             role: "user",
             content: prompt
@@ -552,33 +413,14 @@ JSON 형식으로 응답해주세요: {"title": "제목", "content": "HTML 형�
   }
 
   async generateDerivativeContent(koreanBlog: BlogContent): Promise<DerivativeContent> {
-    const prompt = `
-다음 한글 블로그 포스트를 바탕으로 3가지 파생 콘텐츠를 생성해주세요:
-
-제목: ${koreanBlog.title}
-내용: ${koreanBlog.content}
-
-다음과 같이 생성해주세요:
-1. 영문 블로그: 한글 블로그를 영어로 번역하되, 서구 독자에게 맞게 조정
-2. 스레드 포스트: 4개의 연속된 포스트로 분할 (각 280자 이내)
-3. 트위터 포스트: 4개의 독립적인 트윗 (각 280자 이내, 해시태그 포함)
-
-JSON 형식으로 응답해주세요:
-{
-  "englishBlog": {"title": "영문 제목", "content": "HTML 형식의 영문 본문"},
-  "threads": ["포스트1", "포스트2", "포스트3", "포스트4"],
-  "tweets": ["트윗1", "트윗2", "트윗3", "트윗4"]
-}
-`;
+    const prompt = DERIVATIVE_CONTENT_PROMPT_TEMPLATE
+      .replace('{title}', koreanBlog.title)
+      .replace('{content}', koreanBlog.content);
 
     try {
       const response = await this.client.chat.completions.create({
         model: "grok-2-1212",
         messages: [
-          {
-            role: "system",
-            content: "당신은 다국어 콘텐츠 전문가입니다. 원본의 의미를 유지하면서 각 플랫폼에 최적화된 콘텐츠를 생성합니다. 응답은 반드시 유효한 JSON 형식이어야 합니다."
-          },
           {
             role: "user",
             content: prompt

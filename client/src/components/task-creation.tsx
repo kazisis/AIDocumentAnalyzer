@@ -87,6 +87,13 @@ export default function TaskCreation() {
         <LLMSettings />
       </div>
 
+      <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-blue-800">
+          <strong>📋 작업 생성 안내:</strong> 선택한 AI 모델과 입력한 자료를 바탕으로 전문적인 한글 블로그 콘텐츠를 생성합니다. 
+          생성된 콘텐츠는 검수 후 승인을 거쳐 다양한 플랫폼용 파생 콘텐츠로 확장됩니다.
+        </p>
+      </div>
+
       <Card className="mb-6">
         <CardContent className="p-6">
           <Form {...form}>
@@ -148,14 +155,14 @@ export default function TaskCreation() {
                           <FormControl>
                             <Textarea
                               placeholder="URL 대신 직접 텍스트로 자료를 입력하세요 (기사 내용, 데이터, 보고서 등) - 최대 50,000자"
-                              rows={8}
-                              className="resize-none"
+                              rows={10}
+                              className="resize-y min-h-[200px]"
                               maxLength={50000}
                               {...field}
                             />
                           </FormControl>
                           <p className="text-xs text-gray-500 mt-1">
-                            {field.value?.length || 0}/50,000자
+                            {field.value?.length || 0}/50,000자 (최소 20,000자 이상 권장)
                           </p>
                           <FormMessage />
                         </FormItem>

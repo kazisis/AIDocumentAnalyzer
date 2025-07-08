@@ -36,7 +36,8 @@ The system uses three main entities:
 - **Content**: Generated content storage with type classification and approval status
 
 ### API Integration
-- **OpenAI Integration**: GPT-4 for content generation with structured prompts
+- **Multi-LLM Support**: OpenAI (GPT-4o), Anthropic (Claude 3.5 Sonnet), Google (Gemini 1.5 Pro), DeepSeek (V2), xAI (Grok)
+- **Content Generation System**: Comprehensive prompt system with SEO optimization and 3-second rule implementation
 - **Content Types**: Supports Korean blog, English blog, Twitter threads, and tweet generation
 - **Error Handling**: Comprehensive error handling with structured responses
 
@@ -113,6 +114,10 @@ The system implements a three-phase workflow:
 ```
 Changelog:
 - July 08, 2025. Initial setup
+- July 08, 2025. Added multi-LLM provider support (OpenAI, Anthropic, Gemini, DeepSeek, Grok)
+- July 08, 2025. Added text input capability for large content (50,000+ characters)
+- July 08, 2025. Implemented PRD v1.2 specifications with enhanced content generation system
+- July 08, 2025. Added comprehensive content generation prompt system with SEO optimization
 ```
 
 ## User Preferences
