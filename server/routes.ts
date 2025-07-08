@@ -5,6 +5,15 @@ import { insertTaskSchema, updateTaskStatusSchema, approveContentSchema } from "
 import { generateKoreanBlog, generateDerivativeContent } from "./llm-providers";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Docker
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      service: 'Auto-Insight Engine',
+      version: '1.2.0'
+    });
+  });
   // Task creation and management
   app.post("/api/tasks", async (req, res) => {
     try {
