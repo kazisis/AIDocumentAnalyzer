@@ -1,6 +1,7 @@
-import { tasks, content, type Task, type InsertTask, type Content, type InsertContent, users, type User, type InsertUser } from "@shared/schema";
+import { tasks, content, apiKeys, type Task, type InsertTask, type Content, type InsertContent, users, type User, type InsertUser, type ApiKey } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
+import crypto from "crypto";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -17,6 +18,12 @@ export interface IStorage {
   getContentByTaskIdAndType(taskId: number, type: string): Promise<Content | undefined>;
   updateContent(id: number, updates: Partial<Content>): Promise<Content | undefined>;
   approveContent(id: number, content: string): Promise<Content | undefined>;
+
+  // API Key management
+  getApiKeys(): Promise<Array<{provider: string, hasKey: boolean, lastUpdated?: string}>>;
+  getApiKey(provider: string): Promise<string | null>;
+  saveApiKey(provider: string, apiKey: string): Promise<void>;
+  deleteApiKey(provider: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -108,6 +115,81 @@ export class DatabaseStorage implements IStorage {
       .where(eq(content.id, id))
       .returning();
     return contentItem || undefined;
+  }
+
+  // API Key management methods
+  private encryptApiKey(apiKey: string): string {
+    const algorithm = 'aes-256-gcm';
+    const secretKey = process.env.ENCRYPTION_KEY || 'your-32-character-secret-key-here';
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipher(algorithm, secretKey);
+    
+    let encrypted = cipher.update(apiKey, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    
+    return iv.toString('hex') + ':' + encrypted;
+  }
+
+  private decryptApiKey(encryptedApiKey: string): string {
+    const algorithm = 'aes-256-gcm';
+    const secretKey = process.env.ENCRYPTION_KEY || 'your-32-character-secret-key-here';
+    const [ivHex, encrypted] = encryptedApiKey.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const decipher = crypto.createDecipher(algorithm, secretKey);
+    
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  }
+
+  async getApiKeys(): Promise<Array<{provider: string, hasKey: boolean, lastUpdated?: string}>> {
+    const keys = await db.select().from(apiKeys);
+    const providers = ['openai', 'anthropic', 'gemini', 'deepseek', 'grok'];
+    
+    return providers.map(provider => {
+      const key = keys.find(k => k.provider === provider);
+      return {
+        provider,
+        hasKey: !!key,
+        lastUpdated: key?.updatedAt.toISOString()
+      };
+    });
+  }
+
+  async getApiKey(provider: string): Promise<string | null> {
+    const [key] = await db.select().from(apiKeys).where(eq(apiKeys.provider, provider));
+    if (!key) return null;
+    
+    try {
+      return this.decryptApiKey(key.encryptedKey);
+    } catch (error) {
+      console.error('Failed to decrypt API key:', error);
+      return null;
+    }
+  }
+
+  async saveApiKey(provider: string, apiKey: string): Promise<void> {
+    const encryptedKey = this.encryptApiKey(apiKey);
+    const now = new Date();
+    
+    // Use upsert pattern - try to update first, then insert if not exists
+    const existing = await db.select().from(apiKeys).where(eq(apiKeys.provider, provider));
+    
+    if (existing.length > 0) {
+      await db
+        .update(apiKeys)
+        .set({ encryptedKey, updatedAt: now })
+        .where(eq(apiKeys.provider, provider));
+    } else {
+      await db
+        .insert(apiKeys)
+        .values({ provider, encryptedKey, createdAt: now, updatedAt: now });
+    }
+  }
+
+  async deleteApiKey(provider: string): Promise<void> {
+    await db.delete(apiKeys).where(eq(apiKeys.provider, provider));
   }
 }
 

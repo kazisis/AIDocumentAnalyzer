@@ -33,6 +33,14 @@ export const content = pgTable("content", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const apiKeys = pgTable("api_keys", {
+  id: serial("id").primaryKey(),
+  provider: text("provider").notNull().unique(), // "openai", "anthropic", "gemini", etc.
+  encryptedKey: text("encrypted_key").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -66,3 +74,4 @@ export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
 export type InsertContent = z.infer<typeof insertContentSchema>;
 export type Content = typeof content.$inferSelect;
+export type ApiKey = typeof apiKeys.$inferSelect;

@@ -14,6 +14,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       version: '1.2.0'
     });
   });
+
+  // API Key management endpoints
+  app.get('/api/settings/api-keys', async (_req, res) => {
+    try {
+      const apiKeys = await storage.getApiKeys();
+      res.json(apiKeys);
+    } catch (error) {
+      console.error('Error fetching API keys:', error);
+      res.status(500).json({ error: 'Failed to fetch API keys' });
+    }
+  });
+
+  app.post('/api/settings/api-keys', async (req, res) => {
+    try {
+      const { provider, apiKey } = req.body;
+      
+      if (!provider || !apiKey) {
+        return res.status(400).json({ error: 'Provider and API key are required' });
+      }
+
+      await storage.saveApiKey(provider, apiKey);
+      res.json({ success: true, message: 'API key saved successfully' });
+    } catch (error) {
+      console.error('Error saving API key:', error);
+      res.status(500).json({ error: 'Failed to save API key' });
+    }
+  });
+
+  app.delete('/api/settings/api-keys/:provider', async (req, res) => {
+    try {
+      const { provider } = req.params;
+      await storage.deleteApiKey(provider);
+      res.json({ success: true, message: 'API key deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting API key:', error);
+      res.status(500).json({ error: 'Failed to delete API key' });
+    }
+  });
   // Task creation and management
   app.post("/api/tasks", async (req, res) => {
     try {

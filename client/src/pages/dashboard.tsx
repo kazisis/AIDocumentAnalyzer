@@ -4,13 +4,15 @@ import TaskCreation from "@/components/task-creation";
 import ContentReview from "@/components/content-review";
 import ContentDistribution from "@/components/content-distribution";
 import TaskHistory from "@/components/task-history";
+import ApiSettings from "@/components/api-settings";
 
-type TabType = "create" | "review" | "distribute" | "history";
+type TabType = "create" | "review" | "distribute" | "history" | "settings";
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<TabType>("create");
+  const [activeTab, setActiveTab] = useState<TabType>("settings");
 
   const tabs = [
+    { id: "settings", label: "API 설정", icon: "fas fa-cog" },
     { id: "create", label: "작업 생성", icon: "fas fa-plus-circle" },
     { id: "review", label: "콘텐츠 검수", icon: "fas fa-edit" },
     { id: "distribute", label: "배포 관리", icon: "fas fa-share-alt" },
@@ -71,6 +73,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === "settings" && <ApiSettings />}
         {activeTab === "create" && <TaskCreation />}
         {activeTab === "review" && <ContentReview />}
         {activeTab === "distribute" && <ContentDistribution />}

@@ -45,9 +45,9 @@ export interface LLMProvider {
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
 
-  constructor() {
+  constructor(apiKey?: string) {
     this.client = new OpenAI({ 
-      apiKey: process.env.OPENAI_API_KEY 
+      apiKey: apiKey || process.env.OPENAI_API_KEY 
     });
   }
 
@@ -121,9 +121,9 @@ export class OpenAIProvider implements LLMProvider {
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
 
-  constructor() {
+  constructor(apiKey?: string) {
     this.client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
+      apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
     });
   }
 
@@ -191,8 +191,8 @@ export class AnthropicProvider implements LLMProvider {
 export class GeminiProvider implements LLMProvider {
   private client: GoogleGenAI;
 
-  constructor() {
-    this.client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+  constructor(apiKey?: string) {
+    this.client = new GoogleGenAI({ apiKey: apiKey || process.env.GEMINI_API_KEY || "" });
   }
 
   async generateKoreanBlog(request: BlogGenerationRequest): Promise<BlogContent> {
@@ -291,9 +291,9 @@ export class GeminiProvider implements LLMProvider {
 export class DeepSeekProvider implements LLMProvider {
   private client: OpenAI;
 
-  constructor() {
+  constructor(apiKey?: string) {
     this.client = new OpenAI({
-      apiKey: process.env.DEEPSEEK_API_KEY,
+      apiKey: apiKey || process.env.DEEPSEEK_API_KEY,
       baseURL: "https://api.deepseek.com"
     });
   }
@@ -368,9 +368,9 @@ export class DeepSeekProvider implements LLMProvider {
 export class GrokProvider implements LLMProvider {
   private client: OpenAI;
 
-  constructor() {
+  constructor(apiKey?: string) {
     this.client = new OpenAI({
-      apiKey: process.env.XAI_API_KEY,
+      apiKey: apiKey || process.env.XAI_API_KEY,
       baseURL: "https://api.x.ai/v1"
     });
   }
@@ -441,48 +441,54 @@ export class GrokProvider implements LLMProvider {
   }
 }
 
-// Provider factory
-export function createLLMProvider(): LLMProvider {
-  const provider = process.env.LLM_PROVIDER || 'openai';
+// Provider factory with API key support
+export async function createLLMProvider(preferredProvider?: string): Promise<LLMProvider> {
+  const { storage } = await import("./storage");
+  const provider = preferredProvider || process.env.LLM_PROVIDER || 'openai';
+  
+  // Helper function to get API key from database or environment
+  const getApiKey = async (providerName: string, envVar: string): Promise<string> => {
+    const dbKey = await storage.getApiKey(providerName);
+    const key = dbKey || process.env[envVar];
+    if (!key) {
+      throw new Error(`API key is required for ${providerName} provider. Please configure it in the API settings.`);
+    }
+    return key;
+  };
   
   switch (provider.toLowerCase()) {
-    case 'anthropic':
-      if (!process.env.ANTHROPIC_API_KEY) {
-        throw new Error('ANTHROPIC_API_KEY is required for Anthropic provider');
-      }
-      return new AnthropicProvider();
-    case 'gemini':
-      if (!process.env.GEMINI_API_KEY) {
-        throw new Error('GEMINI_API_KEY is required for Gemini provider');
-      }
-      return new GeminiProvider();
-    case 'deepseek':
-      if (!process.env.DEEPSEEK_API_KEY) {
-        throw new Error('DEEPSEEK_API_KEY is required for DeepSeek provider');
-      }
-      return new DeepSeekProvider();
+    case 'anthropic': {
+      const apiKey = await getApiKey("anthropic", "ANTHROPIC_API_KEY");
+      return new AnthropicProvider(apiKey);
+    }
+    case 'gemini': {
+      const apiKey = await getApiKey("gemini", "GEMINI_API_KEY");
+      return new GeminiProvider(apiKey);
+    }
+    case 'deepseek': {
+      const apiKey = await getApiKey("deepseek", "DEEPSEEK_API_KEY");
+      return new DeepSeekProvider(apiKey);
+    }
     case 'grok':
-    case 'xai':
-      if (!process.env.XAI_API_KEY) {
-        throw new Error('XAI_API_KEY is required for Grok provider');
-      }
-      return new GrokProvider();
+    case 'xai': {
+      const apiKey = await getApiKey("grok", "XAI_API_KEY");
+      return new GrokProvider(apiKey);
+    }
     case 'openai':
-    default:
-      if (!process.env.OPENAI_API_KEY) {
-        throw new Error('OPENAI_API_KEY is required for OpenAI provider');
-      }
-      return new OpenAIProvider();
+    default: {
+      const apiKey = await getApiKey("openai", "OPENAI_API_KEY");
+      return new OpenAIProvider(apiKey);
+    }
   }
 }
 
-// Export legacy functions for backward compatibility
+// Updated legacy functions to support database API keys
 export async function generateKoreanBlog(request: BlogGenerationRequest): Promise<BlogContent> {
-  const provider = createLLMProvider();
+  const provider = await createLLMProvider();
   return provider.generateKoreanBlog(request);
 }
 
 export async function generateDerivativeContent(koreanBlog: BlogContent): Promise<DerivativeContent> {
-  const provider = createLLMProvider();
+  const provider = await createLLMProvider();
   return provider.generateDerivativeContent(koreanBlog);
 }
